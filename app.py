@@ -33,25 +33,25 @@ def train_model():
     proba = model.predict_proba(X_test)[:, 1]
     auc = roc_auc_score(y_test, proba)
     
-    return model, auc, X.columns.tolist()
+    return model, auc
 
-model, auc, feature_cols = train_model()
+model, auc = train_model()
 
 st.title("JPMorgan Forage: Task 3 Credit Risk")
 st.metric("Model AUC on Test Set", f"{auc:.4f}")
 
 st.subheader("Enter New Borrower Details to get PD + Expected Loss")
 
-col1, col2, col3 = st.columns(3)
+col1, col2 = st.columns(2)
 with col1:
     credit_line = st.selectbox("Has Credit Line?", [0, 1])
-    loan_amt = st.number_input("Loan Amount EAD $", min_value=100, value=5000.00, step=100.0)
-    total_debt = st.number_input("Total Debt $", min_value=0.0, value=8000.00, step=100.0)
+    # FIX: all floats now
+    loan_amt = st.number_input("Loan Amount EAD $", min_value=100.0, value=5000.00, step=100.0, format="%.2f")
+    total_debt = st.number_input("Total Debt $", min_value=0.0, value=8000.00, step=100.0, format="%.2f")
+    income = st.number_input("Annual Income $", min_value=0.0, value=65000.00, step=1000.0, format="%.2f")
 with col2:
-    income = st.number_input("Annual Income $", min_value=0.0, value=65000.00, step=1000.0)
-    years_emp = st.number_input("Years Employed", min_value=0, value=4, step=1)
-with col3:
-    fico_score = st.number_input("FICO Score", min_value=300, max_value=850, value=680, step=1)
+    years_emp = st.number_input("Years Employed", min_value=0.0, value=4.0, step=1.0, format="%.0f")
+    fico_score = st.number_input("FICO Score", min_value=300.0, max_value=850.0, value=680.0, step=1.0, format="%.0f")
 
 if st.button("Calculate Expected Loss"):
     input_dict = {
@@ -69,6 +69,4 @@ if st.button("Calculate Expected Loss"):
     
     st.success(f"**Predicted PD: {pd_prob:.4f}**")
     st.metric(label=f"Expected Loss @10% Recovery", value=f"${expected_loss:,.2f}")
-    
-    # FIXED: Use single quotes outside so the "0.90" inside doesn't break
     st.caption('Formula used: EL = PD * EAD * LGD, where LGD = 1 - 0.10 = 0.90')
